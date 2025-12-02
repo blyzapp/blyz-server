@@ -39,6 +39,9 @@ connectMongo();
 import authRouter from "./routes/authRoutes.mjs";
 import jobsRouter from "./routes/jobs.mjs";
 
+// ⭐ NEW: Waitlist Route
+import waitlistRoute from "./routes/public/waitlistRoute.mjs";
+
 // --- Operator App ---
 import operatorJobsRouter from "./routes/operator/operatorJobsRoute.mjs";
 import operatorMyJobsRouter from "./routes/operator/operatorMyJobsRoute.mjs";
@@ -95,6 +98,9 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRouter);
 app.use("/api/jobs", jobsRouter);
 
+// ⭐ NEW — Waitlist
+app.use("/api/waitlist", waitlistRoute);
+
 // --- Operator ---
 app.use("/api/operator/jobs", operatorJobsRouter);
 app.use("/api/operator/my", operatorMyJobsRouter);
@@ -133,4 +139,5 @@ server.listen(PORT, () => {
   console.log("🔹 /api/admin/operators");
   console.log("🔹 /api/admin/payouts");
   console.log("🔹 /api/admin/dashboard");
+  console.log("🔹 /api/waitlist/join  <-- NEW");
 });
