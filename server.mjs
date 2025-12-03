@@ -65,11 +65,15 @@ import adminAuthRoutes from "./routes/admin/adminAuthRoutes.mjs";
 const app = express();
 
 // ============================================================================
-// 🛡️ CORS CONFIG — REQUIRED FOR ADMIN PANEL
+// 🛡️ CORS CONFIG — FIXED FOR LIVE DOMAIN
 // ============================================================================
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: [
+      "http://localhost:3000",
+      "https://blyzapp.com",
+      "https://www.blyzapp.com",
+    ],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
