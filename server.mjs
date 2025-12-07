@@ -1,21 +1,43 @@
 // ============================================================================
-// 🌐 Blyz Server — FINAL 2025 BUILD (FULL WEBSOCKET INTEGRATION)
-// Operator App + Customer App + Admin Panel + Live Tracking
+// 🌐 Blyz Server — FINAL DEV/PROD BUILD
 // ============================================================================
-
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import morgan from "morgan";
 import mongoose from "mongoose";
 import http from "http";
-
-// ⭐ WEBSOCKETS
 import { initWebSocketServer } from "./websocket/index.mjs";
 
-// ============================================================================
-// 🍃 CONNECT TO MONGODB
-// ============================================================================
+// Routes
+import authRouter from "./routes/authRoutes.mjs";
+import jobsRouter from "./routes/jobs.mjs";
+import waitlistRoute from "./routes/public/waitlistRoute.mjs";
+
+import operatorJobsRouter from "./routes/operator/operatorJobsRoute.mjs";
+import operatorMyJobsRouter from "./routes/operator/operatorMyJobsRoute.mjs";
+import operatorJobDetailRouter from "./routes/operator/operatorJobDetailRoute.mjs";
+import operatorJobStartRouter from "./routes/operator/operatorJobStartRoute.mjs";
+import operatorJobCompleteRouter from "./routes/operator/operatorJobCompleteRoute.mjs";
+import operatorPhotosRouter from "./routes/operator/operatorPhotosRoute.mjs";
+
+// Admin
+import adminJobRoutes from "./routes/admin/adminJobRoutes.mjs";
+import adminPayoutRoutes from "./routes/admin/adminPayoutRoutes.mjs";
+import adminOperatorRoutes from "./routes/admin/adminOperatorRoutes.mjs";
+import adminDashboardRoutes from "./routes/admin/adminDashboardRoutes.mjs";
+import adminAuthRoutes from "./routes/admin/adminAuthRoutes.mjs";
+import adminAnalyticsRoutes from "./routes/admin/analyticsRoutes.mjs";
+
+// ⭐ FIXED — Correct file name + path
+import adminWaitlistRoutes from "./routes/admin/adminWaitlistRoutes.mjs";
+
+// Middleware
+import requireAdmin from "./middleware/adminAuth.mjs";
+
+// -----------------------------------------------------------------------------
+// MongoDB
+// -----------------------------------------------------------------------------
 async function connectMongo() {
   try {
     await mongoose.connect(process.env.MONGO_URI, {
@@ -28,45 +50,13 @@ async function connectMongo() {
     process.exit(1);
   }
 }
-
 connectMongo();
 
-// ============================================================================
-// 📦 ROUTE IMPORTS
-// ============================================================================
-
-// --- Public ---
-import authRouter from "./routes/authRoutes.mjs";
-import jobsRouter from "./routes/jobs.mjs";
-
-// ⭐ NEW: Waitlist Route
-import waitlistRoute from "./routes/public/waitlistRoute.mjs";
-
-// --- Operator App ---
-import operatorJobsRouter from "./routes/operator/operatorJobsRoute.mjs";
-import operatorMyJobsRouter from "./routes/operator/operatorMyJobsRoute.mjs";
-import operatorJobDetailRouter from "./routes/operator/operatorJobDetailRoute.mjs";
-import operatorJobStartRouter from "./routes/operator/operatorJobStartRoute.mjs";
-import operatorJobCompleteRouter from "./routes/operator/operatorJobCompleteRoute.mjs";
-import operatorPhotosRouter from "./routes/operator/operatorPhotosRoute.mjs";
-
-// --- Admin Panel ---
-import adminJobRoutes from "./routes/admin/adminJobRoutes.mjs";
-import adminPayoutRoutes from "./routes/admin/adminPayoutRoutes.mjs";
-import adminOperatorRoutes from "./routes/admin/adminOperatorRoutes.mjs";
-import adminDashboardRoutes from "./routes/admin/adminDashboardRoutes.mjs";
-
-// ⭐ Admin login
-import adminAuthRoutes from "./routes/admin/adminAuthRoutes.mjs";
-
-// ============================================================================
-// 🚀 INIT EXPRESS
-// ============================================================================
+// -----------------------------------------------------------------------------
+// Express App
+// -----------------------------------------------------------------------------
 const app = express();
 
-// ============================================================================
-// 🛡️ CORS CONFIG — FIXED FOR LIVE DOMAIN
-// ============================================================================
 app.use(
   cors({
     origin: [
@@ -84,28 +74,23 @@ app.use(morgan("dev"));
 app.use(express.json());
 app.use("/uploads", express.static("uploads"));
 
-// ============================================================================
-// ❤️ HEALTH CHECK
-// ============================================================================
-app.get("/", (req, res) => {
-  res.status(200).json({
-    ok: true,
-    message: "Blyz API is running",
-  });
-});
+// -----------------------------------------------------------------------------
+// Health check
+// -----------------------------------------------------------------------------
+app.get("/", (req, res) =>
+  res.status(200).json({ ok: true, message: "Blyz API is running" })
+);
 
-// ============================================================================
-// 🚦 ROUTES
-// ============================================================================
-
-// --- Public ---
+// -----------------------------------------------------------------------------
+// Public Routes
+// -----------------------------------------------------------------------------
 app.use("/api/auth", authRouter);
 app.use("/api/jobs", jobsRouter);
-
-// ⭐ NEW — Waitlist
 app.use("/api/waitlist", waitlistRoute);
 
-// --- Operator ---
+// -----------------------------------------------------------------------------
+// Operator Routes
+// -----------------------------------------------------------------------------
 app.use("/api/operator/jobs", operatorJobsRouter);
 app.use("/api/operator/my", operatorMyJobsRouter);
 app.use("/api/operator/job", operatorJobDetailRouter);
@@ -113,35 +98,29 @@ app.use("/api/operator/job/start", operatorJobStartRouter);
 app.use("/api/operator/job/complete", operatorJobCompleteRouter);
 app.use("/api/operator/photos", operatorPhotosRouter);
 
-// --- Admin Login ---
+// -----------------------------------------------------------------------------
+// Admin Routes
+// -----------------------------------------------------------------------------
 app.use("/api/admin/auth", adminAuthRoutes);
-
-// --- Admin Main ---
 app.use("/api/admin/jobs", adminJobRoutes);
 app.use("/api/admin/payouts", adminPayoutRoutes);
 app.use("/api/admin/operators", adminOperatorRoutes);
 app.use("/api/admin/dashboard", adminDashboardRoutes);
+app.use("/api/admin/analytics", requireAdmin, adminAnalyticsRoutes);
 
-// ============================================================================
-// 🛰️ SERVER + WEBSOCKETS
-// ============================================================================
+// ⭐ FIX: Now loads correct waitlist file
+app.use("/api/admin/waitlist", requireAdmin, adminWaitlistRoutes);
+
+// -----------------------------------------------------------------------------
+// Server + WebSockets
+// -----------------------------------------------------------------------------
 const server = http.createServer(app);
 initWebSocketServer(server);
 
-// ============================================================================
-// ▶️ START SERVER
-// ============================================================================
 const PORT = process.env.PORT || 5000;
-
 server.listen(PORT, () => {
   console.log(`🚀 Blyz Server running on http://localhost:${PORT}`);
   console.log("=========================================");
   console.log("🛰️ WebSocket Live Tracking Enabled");
-  console.log("=========================================");
-  console.log("🔹 /api/admin/auth/login");
-  console.log("🔹 /api/admin/jobs");
-  console.log("🔹 /api/admin/operators");
-  console.log("🔹 /api/admin/payouts");
-  console.log("🔹 /api/admin/dashboard");
-  console.log("🔹 /api/waitlist/join  <-- NEW");
 });
+

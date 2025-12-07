@@ -3,7 +3,6 @@
 // ============================================================================
 // Provides:
 // - POST /api/admin/auth/login → Admin login + JWT return
-// - Dev-mode auto login using MOCK_ADMIN_EMAIL
 // ============================================================================
 
 import express from "express";
@@ -36,9 +35,9 @@ router.post("/login", async (req, res) => {
         {
           id: "dev-admin-id",
           email,
-          role: "admin",
+          isAdmin: true,      // ⭐ REQUIRED
         },
-        process.env.JWT_SECRET,
+        process.env.ADMIN_JWT_SECRET,
         { expiresIn: "7d" }
       );
 
@@ -73,15 +72,15 @@ router.post("/login", async (req, res) => {
     }
 
     // ------------------------------------------------------------------------
-    // 4. Create JWT
+    // 4. Create JWT (FINAL FIX)
     // ------------------------------------------------------------------------
     const token = jwt.sign(
       {
         id: admin._id,
         email: admin.email,
-        role: "admin",
+        isAdmin: true,       // ⭐ REQUIRED
       },
-      process.env.JWT_SECRET,
+      process.env.ADMIN_JWT_SECRET,
       { expiresIn: "7d" }
     );
 

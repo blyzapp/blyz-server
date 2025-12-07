@@ -48,8 +48,9 @@ const UserSchema = new mongoose.Schema(
     lastLocationAt: { type: Date, default: null },
   },
   {
-    timestamps: true,
+    timestamps: true, // adds createdAt and updatedAt automatically
   }
 );
 
+// Export the User model
 export default mongoose.model("User", UserSchema);
