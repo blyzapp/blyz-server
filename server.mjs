@@ -1,5 +1,5 @@
 // ============================================================================
-// 🌐 Blyz Server — FINAL DEV/PROD BUILD
+// 🌐 Blyz Server — FINAL DEV/PROD BUILD (WITH OPERATOR WAITLIST)
 // ============================================================================
 
 import "dotenv/config";
@@ -11,16 +11,17 @@ import http from "http";
 
 import { initWebSocketServer } from "./websocket/index.mjs";
 
-// -----------------------------------------------------------------------------
-// ROUTES — PUBLIC
-// -----------------------------------------------------------------------------
+// ============================================================================
+// 📦 ROUTE IMPORTS
+// ============================================================================
+
+// --- Public ---
 import authRouter from "./routes/authRoutes.mjs";
 import jobsRouter from "./routes/jobs.mjs";
-import waitlistRoute from "./routes/public/waitlistRoute.mjs";
+import waitlistRoute from "./routes/public/waitlistRoute.mjs";              // Customer waitlist
+import operatorWaitlistRoute from "./routes/public/operatorWaitlistRoute.mjs"; // ⭐ NEW operator waitlist
 
-// -----------------------------------------------------------------------------
-// ROUTES — OPERATOR
-// -----------------------------------------------------------------------------
+// --- Operator App ---
 import operatorJobsRouter from "./routes/operator/operatorJobsRoute.mjs";
 import operatorMyJobsRouter from "./routes/operator/operatorMyJobsRoute.mjs";
 import operatorJobDetailRouter from "./routes/operator/operatorJobDetailRoute.mjs";
@@ -28,9 +29,7 @@ import operatorJobStartRouter from "./routes/operator/operatorJobStartRoute.mjs"
 import operatorJobCompleteRouter from "./routes/operator/operatorJobCompleteRoute.mjs";
 import operatorPhotosRouter from "./routes/operator/operatorPhotosRoute.mjs";
 
-// -----------------------------------------------------------------------------
-// ROUTES — ADMIN
-// -----------------------------------------------------------------------------
+// --- Admin Panel ---
 import adminJobRoutes from "./routes/admin/adminJobRoutes.mjs";
 import adminPayoutRoutes from "./routes/admin/adminPayoutRoutes.mjs";
 import adminOperatorRoutes from "./routes/admin/adminOperatorRoutes.mjs";
@@ -70,10 +69,10 @@ const app = express();
 app.use(
   cors({
     origin: [
-      "http://localhost:3000", // local dev
+      "http://localhost:3000",
       "https://blyzapp.com",
       "https://www.blyzapp.com",
-      "https://blyz-landing-static-git-main-blyzapps-projects.vercel.app", // Vercel preview
+      "https://blyz-landing-static-git-main-blyzapps-projects.vercel.app",
     ],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -100,10 +99,11 @@ app.get("/", (req, res) =>
 // ============================================================================
 app.use("/api/auth", authRouter);
 app.use("/api/jobs", jobsRouter);
-app.use("/api/waitlist", waitlistRoute); // POST /api/waitlist/join
+app.use("/api/waitlist", waitlistRoute);              // Customer waitlist
+app.use("/api/waitlist/operator", operatorWaitlistRoute); // ⭐ NEW operator waitlist
 
 // ============================================================================
-// 🛠️ OPERATOR ROUTES
+// 🛠️ OPERATOR APP ROUTES
 // ============================================================================
 app.use("/api/operator/jobs", operatorJobsRouter);
 app.use("/api/operator/my", operatorMyJobsRouter);
@@ -113,15 +113,15 @@ app.use("/api/operator/job/complete", operatorJobCompleteRouter);
 app.use("/api/operator/photos", operatorPhotosRouter);
 
 // ============================================================================
-// 🔐 ADMIN ROUTES (protected by requireAdmin where needed)
+// 🔐 ADMIN ROUTES (some protected by requireAdmin)
 // ============================================================================
-app.use("/api/admin/auth", adminAuthRoutes); // login — not protected
+app.use("/api/admin/auth", adminAuthRoutes);
 app.use("/api/admin/jobs", adminJobRoutes);
 app.use("/api/admin/payouts", adminPayoutRoutes);
 app.use("/api/admin/operators", adminOperatorRoutes);
 app.use("/api/admin/dashboard", adminDashboardRoutes);
 
-// Protected Routes
+// Protected admin routes
 app.use("/api/admin/analytics", requireAdmin, adminAnalyticsRoutes);
 app.use("/api/admin/waitlist", requireAdmin, adminWaitlistRoutes);
 
